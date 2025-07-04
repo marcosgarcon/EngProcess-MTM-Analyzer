@@ -10,7 +10,32 @@
     <header>
         <h1>EngProcess - Ferramenta de Cronoanálise MTM</h1>
     </header>
+
     <main class="container">
+        
+        <div class="settings-section">
+            <h2>Parâmetros da Análise</h2>
+            <div class="params-grid">
+                <div>
+                    <label for="ritmo">Fator de Ritmo (%)</label>
+                    <input type="number" id="ritmo" value="100" step="1">
+                </div>
+                <div>
+                    <label for="suplemento">Suplementos (%)</label>
+                    <input type="number" id="suplemento" value="5" step="1">
+                </div>
+                <div>
+                    <label for="tmu_factor">TMU para Segundos</label>
+                    <input type="number" id="tmu_factor" value="0.036" step="0.001" readonly>
+                </div>
+            </div>
+            <div class="config-buttons">
+                <button id="saveConfigBtn">Salvar Config. JSON</button>
+                <label for="loadConfigInput" class="button-like-label">Carregar Config. JSON</label>
+                <input type="file" id="loadConfigInput" accept=".json" style="display: none;">
+            </div>
+        </div>
+
         <div class="video-section">
             <h2>Análise por Vídeo</h2>
             <input type="file" id="videoUpload" accept="video/*">
@@ -20,6 +45,7 @@
                 <button id="markEndBtn">Marcar Fim (F)</button>
             </div>
         </div>
+
         <div class="analysis-section">
             <h2>Tabela de Cronoanálise</h2>
             <table id="analysisTable">
@@ -29,15 +55,34 @@
                         <th>Início (s)</th>
                         <th>Fim (s)</th>
                         <th>Delta (s)</th>
-                        <th>Descrição do Movimento</th>
+                        <th>Descrição</th>
                         <th>Código MTM</th>
                         <th>TMU</th>
+                        <th>Tempo Padrão (s)</th>
                     </tr>
                 </thead>
                 <tbody>
                     </tbody>
             </table>
-        </div>
+
+            <div class="summary-section">
+                <h3>Sumário da Análise</h3>
+                <div class="summary-grid">
+                    <div>
+                        <h4>Tempo de Ciclo (Padrão)</h4>
+                        <p id="total-standard-time">0.00 s</p>
+                    </div>
+                    <div>
+                        <h4>Total de Elementos</h4>
+                        <p id="total-elements">0</p>
+                    </div>
+                    <div>
+                        <h4>Tempo Médio / Elemento</h4>
+                        <p id="average-time">0.00 s</p>
+                    </div>
+                </div>
+            </div>
+            </div>
     </main>
     <script src="script.js"></script>
 </body>
