@@ -1,34 +1,50 @@
-// Referências para o Sumário
-const totalStandardTimeEl = document.getElementById('total-standard-time');
-const totalElementsEl = document.getElementById('total-elements');
-const averageTimeEl = document.getElementById('average-time');document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+    // Referências aos Elementos do DOM
     const videoUpload = document.getElementById('videoUpload');
     const videoPlayer = document.getElementById('videoPlayer');
     const markStartBtn = document.getElementById('markStartBtn');
     const markEndBtn = document.getElementById('markEndBtn');
     const analysisTableBody = document.querySelector("#analysisTable tbody");
-    
-    // URL da nossa API no backend. Garanta que seu servidor python está rodando!
-    const API_URL = 'http://127.0.0.1:5000';
+    const ritmoInput = document.getElementById('ritmo');
+    const suplementoInput = document.getElementById('suplemento');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const loadConfigInput = document.getElementById('loadConfigInput');
 
+    // Referências para o Sumário
+    const totalStandardTimeEl = document.getElementById('total-standard-time');
+    const totalElementsEl = document.getElementById('total-elements');
+    const averageTimeEl = document.getElementById('average-time');
+
+    const API_URL = 'http://127.0.0.1:5000';
     let startTime = null;
     let elementCounter = 0;
 
-    videoUpload.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const fileURL = URL.createObjectURL(file);
-            videoPlayer.src = fileURL;
-        }
-    });
+    // --- NOVA FUNÇÃO DE CÁLCULO DO SUMÁRIO ---
+    const updateSummary = () => {
+        const allRows = analysisTableBody.querySelectorAll('tr');
+        const standardTimeCells = document.querySelectorAll('.standard-time-cell');
+        
+        let totalStandardTime = 0;
+        standardTimeCells.forEach(cell => {
+            const timeValue = parseFloat(cell.textContent);
+            if (!isNaN(timeValue)) {
+                totalStandardTime += timeValue;
+            }
+        });
+        
+        const totalElements = allRows.length;
+        const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
 
-    markStartBtn.addEventListener('click', () => {
-        startTime = videoPlayer.currentTime;
-        markStartBtn.style.backgroundColor = '#28a745'; 
-        markEndBtn.style.backgroundColor = ''; 
-    });
+        // Atualiza o HTML
+        totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
+        totalElementsEl.textContent = totalElements;
+        averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
+    };
 
-    markEndBtn.addEventListener('click', () => {
+    // --- FUNÇÕES PRINCIPAIS ---
+
+    // Marca o fim de um movimento, cria a linha e calcula o tempo padrão
+    const handleMarkEnd = async () => {
         if (startTime === null) {
             alert("Por favor, marque o início do movimento primeiro!");
             return;
@@ -42,6 +58,11 @@ const averageTimeEl = document.getElementById('average-time');document.addEventL
         elementCounter++;
         const delta = endTime - startTime;
         
+        const ritmo = parseFloat(ritmoInput.value);
+        const suplemento = parseFloat(suplementoInput.value);
+
+        const standardTime = await calculateStandardTime(delta, ritmo, suplemento);
+
         const newRow = analysisTableBody.insertRow();
         newRow.innerHTML = `
             <td>${elementCounter}</td>
@@ -51,32 +72,34 @@ const averageTimeEl = document.getElementById('average-time');document.addEventL
             <td contenteditable="true" class="description-cell"></td>
             <td contenteditable="true" class="mtm-code-cell"></td>
             <td class="tmu-cell"></td>
+            <td class="standard-time-cell">${standardTime.toFixed(4)}</td>
         `;
 
         startTime = null; 
         markStartBtn.style.backgroundColor = '';
-    });
 
-    // --- NOVIDADE AQUI ---
-    // Escuta por eventos na tabela de análise inteira
-    analysisTableBody.addEventListener('input', function(event) {
-        // Verifica se o evento aconteceu em uma célula de código MTM
-        if (event.target.classList.contains('mtm-code-cell')) {
-            const cell = event.target;
-            const mtmCode = cell.innerText.trim();
-            const row = cell.parentElement;
-            const tmuCell = row.querySelector('.tmu-cell');
+        // *** CHAMADA PARA A FUNÇÃO DE SUMÁRIO ESTÁ AQUI ***
+        updateSummary(); 
+    };
 
-            // Se o código tiver pelo menos 2 caracteres, busca o TMU
-            if (mtmCode.length >= 2) {
-                fetchTMU(mtmCode, tmuCell);
-            } else {
-                tmuCell.textContent = ''; // Limpa o campo TMU se o código for apagado
-            }
+    // --- FUNÇÕES DE API ---
+
+    async function calculateStandardTime(delta, ritmo, suplemento) {
+        try {
+            const response = await fetch(`${API_URL}/api/calculate_standard_time`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delta, ritmo, suplemento })
+            });
+            if (!response.ok) return 0;
+            const data = await response.json();
+            return data.tempo_padrao;
+        } catch (error) {
+            console.error("Erro ao calcular tempo padrão:", error);
+            return 0;
         }
-    });
+    }
 
-    // Função que chama nossa API no backend
     async function fetchTMU(code, targetCell) {
         try {
             const response = await fetch(`${API_URL}/api/get_tmu/${code}`);
@@ -90,30 +113,69 @@ const averageTimeEl = document.getElementById('average-time');document.addEventL
             console.error("Erro ao conectar com o backend:", error);
             targetCell.textContent = 'Erro';
         }
-    }// --- NOVA FUNÇÃO DE CÁLCULO DO SUMÁRIO ---
-const updateSummary = () => {
-    const allRows = analysisTableBody.querySelectorAll('tr');
-    const standardTimeCells = document.querySelectorAll('.standard-time-cell');
+    }
+
+    // --- FUNÇÕES DE CONFIGURAÇÃO (JSON) ---
+
+    const handleSaveConfig = () => {
+        const config = {
+            ritmo: ritmoInput.value,
+            suplemento: suplementoInput.value
+        };
+        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'config_mtm.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleLoadConfig = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const config = JSON.parse(e.target.result);
+                if (config.ritmo) ritmoInput.value = config.ritmo;
+                if (config.suplemento) suplementoInput.value = config.suplemento;
+            } catch (error) {
+                alert("Erro ao ler o arquivo de configuração. Verifique se é um JSON válido.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    // --- EVENT LISTENERS ---
+    videoUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) videoPlayer.src = URL.createObjectURL(file);
+    });
     
-    let totalStandardTime = 0;
-    standardTimeCells.forEach(cell => {
-        const timeValue = parseFloat(cell.textContent);
-        if (!isNaN(timeValue)) {
-            totalStandardTime += timeValue;
+    markStartBtn.addEventListener('click', () => {
+        startTime = videoPlayer.currentTime;
+        markStartBtn.style.backgroundColor = '#28a745'; 
+        markEndBtn.style.backgroundColor = ''; 
+    });
+    
+    markEndBtn.addEventListener('click', handleMarkEnd);
+
+    analysisTableBody.addEventListener('input', (e) => {
+        if (e.target.classList.contains('mtm-code-cell')) {
+            const cell = e.target;
+            const mtmCode = cell.innerText.trim().toUpperCase();
+            const tmuCell = cell.parentElement.querySelector('.tmu-cell');
+            if (mtmCode.length >= 2) fetchTMU(mtmCode, tmuCell);
+            else tmuCell.textContent = '';
         }
     });
-    
-    const totalElements = allRows.length;
-    const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
 
-    // Atualiza o HTML
-    totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
-    totalElementsEl.textContent = totalElements;
-    averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
-};
-    
     document.addEventListener('keydown', (e) => {
-        if(e.key.toLowerCase() === 'i') markStartBtn.click();
-        if(e.key.toLowerCase() === 'f') markEndBtn.click();
+        if (e.key.toLowerCase() === 'i') markStartBtn.click();
+        if (e.key.toLowerCase() === 'f') markEndBtn.click();
     });
+
+    saveConfigBtn.addEventListener('click', handleSaveConfig);
+    loadConfigInput.addEventListener('change', handleLoadConfig);
 });
