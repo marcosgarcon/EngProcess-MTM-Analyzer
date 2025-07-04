@@ -90,7 +90,27 @@ const averageTimeEl = document.getElementById('average-time');document.addEventL
             console.error("Erro ao conectar com o backend:", error);
             targetCell.textContent = 'Erro';
         }
-    }
+    }// --- NOVA FUNÇÃO DE CÁLCULO DO SUMÁRIO ---
+const updateSummary = () => {
+    const allRows = analysisTableBody.querySelectorAll('tr');
+    const standardTimeCells = document.querySelectorAll('.standard-time-cell');
+    
+    let totalStandardTime = 0;
+    standardTimeCells.forEach(cell => {
+        const timeValue = parseFloat(cell.textContent);
+        if (!isNaN(timeValue)) {
+            totalStandardTime += timeValue;
+        }
+    });
+    
+    const totalElements = allRows.length;
+    const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
+
+    // Atualiza o HTML
+    totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
+    totalElementsEl.textContent = totalElements;
+    averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
+};
     
     document.addEventListener('keydown', (e) => {
         if(e.key.toLowerCase() === 'i') markStartBtn.click();
