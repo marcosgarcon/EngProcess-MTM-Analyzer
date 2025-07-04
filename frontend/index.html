@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EngProcess - MTM Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>EngProcess - Ferramenta de Cronoanálise MTM</h1>
+    </header>
+    <main class="container">
+        <div class="video-section">
+            <h2>Análise por Vídeo</h2>
+            <input type="file" id="videoUpload" accept="video/*">
+            <video id="videoPlayer" width="100%" controls></video>
+            <div class="controls">
+                <button id="markStartBtn">Marcar Início (I)</button>
+                <button id="markEndBtn">Marcar Fim (F)</button>
+            </div>
+        </div>
+        <div class="analysis-section">
+            <h2>Tabela de Cronoanálise</h2>
+            <table id="analysisTable">
+                <thead>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Início (s)</th>
+                        <th>Fim (s)</th>
+                        <th>Delta (s)</th>
+                        <th>Descrição do Movimento</th>
+                        <th>Código MTM</th>
+                        <th>TMU</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+}
+header {
+    background-color: #004080;
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+}
+.container {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+}
+.video-section, .analysis-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.video-section {
+    flex: 1;
+}
+.analysis-section {
+    flex: 2;
+}
+.controls button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.controls button:hover {
+    background-color: #0056b3;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #e9ecef;
+}
+input[type="file"] {
+    margin-bottom: 15px;
+}
