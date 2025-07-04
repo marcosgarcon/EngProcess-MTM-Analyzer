@@ -55,3 +55,30 @@ th {
 input[type="file"] {
     margin-bottom: 15px;
 }
+/* Estilos para o Sumário */
+.summary-section {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 2px solid #e9ecef;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    text-align: center;
+}
+.summary-grid div {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+.summary-grid h4 {
+    margin-top: 0;
+    color: #004080;
+}
+.summary-grid p {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0;
+    color: #333;
+}
