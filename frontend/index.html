@@ -67,7 +67,6 @@
 
             <div class="summary-section">
                 <h3>Sumário da Análise</h3>
-                <button id="generateReportBtn">Gerar Laudo IA</button>
                 <div class="summary-grid">
                     <div>
                         <h4>Tempo de Ciclo (Padrão)</h4>
@@ -82,9 +81,19 @@
                         <p id="average-time">0.00 s</p>
                     </div>
                 </div>
+                <button id="generateReportBtn">Gerar Laudo IA</button>
             </div>
-            </div>
+        </div>
     </main>
+
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Laudo de Análise e Sugestões de Melhoria</h2>
+            <pre id="report-text"></pre>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
