@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Referências aos Elementos do DOM
+    // --- REFERÊNCIAS AOS ELEMENTOS DO DOM ---
     const videoUpload = document.getElementById('videoUpload');
     const videoPlayer = document.getElementById('videoPlayer');
     const markStartBtn = document.getElementById('markStartBtn');
@@ -9,17 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const suplementoInput = document.getElementById('suplemento');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
     const loadConfigInput = document.getElementById('loadConfigInput');
-
     // Referências para o Sumário
     const totalStandardTimeEl = document.getElementById('total-standard-time');
     const totalElementsEl = document.getElementById('total-elements');
     const averageTimeEl = document.getElementById('average-time');
+    // Novas referências para o Modal do Laudo
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const reportModal = document.getElementById('reportModal');
+    const reportText = document.getElementById('report-text');
+    const closeButton = document.querySelector('.close-button');
 
     const API_URL = 'http://127.0.0.1:5000';
     let startTime = null;
     let elementCounter = 0;
 
-    // --- NOVA FUNÇÃO DE CÁLCULO DO SUMÁRIO ---
+    // --- FUNÇÕES DE CÁLCULO E ATUALIZAÇÃO ---
     const updateSummary = () => {
         const allRows = analysisTableBody.querySelectorAll('tr');
         const standardTimeCells = document.querySelectorAll('.standard-time-cell');
@@ -35,15 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalElements = allRows.length;
         const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
 
-        // Atualiza o HTML
         totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
         totalElementsEl.textContent = totalElements;
         averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
     };
 
-    // --- FUNÇÕES PRINCIPAIS ---
-
-    // Marca o fim de um movimento, cria a linha e calcula o tempo padrão
+    // --- FUNÇÕES DE INTERAÇÃO PRINCIPAL ---
     const handleMarkEnd = async () => {
         if (startTime === null) {
             alert("Por favor, marque o início do movimento primeiro!");
@@ -77,13 +78,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startTime = null; 
         markStartBtn.style.backgroundColor = '';
-
-        // *** CHAMADA PARA A FUNÇÃO DE SUMÁRIO ESTÁ AQUI ***
         updateSummary(); 
     };
 
-    // --- FUNÇÕES DE API ---
+    const handleGenerateReport = async () => {
+        const tableData = [];
+        const rows = analysisTableBody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            alert("A tabela de análise está vazia. Adicione movimentos para gerar um laudo.");
+            return;
+        }
 
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            tableData.push({
+                id: cells[0].textContent,
+                delta: cells[3].textContent,
+                description: cells[4].textContent,
+                mtmCode: cells[5].textContent
+            });
+        });
+
+        generateReportBtn.textContent = 'Analisando...';
+        generateReportBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${API_URL}/api/generate_report`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tableData)
+            });
+            if (!response.ok) throw new Error('Falha ao gerar o laudo a partir da API.');
+
+            const data = await response.json();
+            reportText.textContent = data.report;
+            reportModal.style.display = 'block';
+
+        } catch (error) {
+            alert(error.message);
+            console.error("Erro ao gerar laudo:", error);
+        } finally {
+            generateReportBtn.textContent = 'Gerar Laudo IA';
+            generateReportBtn.disabled = false;
+        }
+    };
+
+    // --- FUNÇÕES DE API (BACKEND) ---
     async function calculateStandardTime(delta, ritmo, suplemento) {
         try {
             const response = await fetch(`${API_URL}/api/calculate_standard_time`, {
@@ -116,12 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- FUNÇÕES DE CONFIGURAÇÃO (JSON) ---
-
     const handleSaveConfig = () => {
-        const config = {
-            ritmo: ritmoInput.value,
-            suplemento: suplementoInput.value
-        };
+        const config = { ritmo: ritmoInput.value, suplemento: suplementoInput.value };
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -141,13 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (config.ritmo) ritmoInput.value = config.ritmo;
                 if (config.suplemento) suplementoInput.value = config.suplemento;
             } catch (error) {
-                alert("Erro ao ler o arquivo de configuração. Verifique se é um JSON válido.");
+                alert("Erro ao ler o arquivo de configuração.");
             }
         };
         reader.readAsText(file);
     };
 
-    // --- EVENT LISTENERS ---
+    // --- EVENT LISTENERS (OUVINTES DE EVENTOS) ---
     videoUpload.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) videoPlayer.src = URL.createObjectURL(file);
@@ -178,4 +214,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveConfigBtn.addEventListener('click', handleSaveConfig);
     loadConfigInput.addEventListener('change', handleLoadConfig);
+
+    // Listeners para o Laudo IA
+    generateReportBtn.addEventListener('click', handleGenerateReport);
+    closeButton.addEventListener('click', () => {
+        reportModal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+        if (event.target == reportModal) {
+            reportModal.style.display = 'none';
+        }
+    });
 });
