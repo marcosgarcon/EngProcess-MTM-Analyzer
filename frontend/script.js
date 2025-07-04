@@ -1,4 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
+// Referências para o Sumário
+const totalStandardTimeEl = document.getElementById('total-standard-time');
+const totalElementsEl = document.getElementById('total-elements');
+const averageTimeEl = document.getElementById('average-time');document.addEventListener('DOMContentLoaded', () => {
     const videoUpload = document.getElementById('videoUpload');
     const videoPlayer = document.getElementById('videoPlayer');
     const markStartBtn = document.getElementById('markStartBtn');
