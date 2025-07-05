@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- REFERÊNCIAS AOS ELEMENTOS DO DOM ---
     const videoUpload = document.getElementById('videoUpload');
     const videoPlayer = document.getElementById('videoPlayer');
+    const canvasElement = document.getElementById('outputCanvas');
+    const canvasCtx = canvasElement.getContext('2d');
     const markStartBtn = document.getElementById('markStartBtn');
     const markEndBtn = document.getElementById('markEndBtn');
     const analysisTableBody = document.querySelector("#analysisTable tbody");
@@ -9,11 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const suplementoInput = document.getElementById('suplemento');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
     const loadConfigInput = document.getElementById('loadConfigInput');
-    // Referências para o Sumário
     const totalStandardTimeEl = document.getElementById('total-standard-time');
     const totalElementsEl = document.getElementById('total-elements');
     const averageTimeEl = document.getElementById('average-time');
-    // Novas referências para o Modal do Laudo
     const generateReportBtn = document.getElementById('generateReportBtn');
     const reportModal = document.getElementById('reportModal');
     const reportText = document.getElementById('report-text');
@@ -23,11 +23,46 @@ document.addEventListener('DOMContentLoaded', () => {
     let startTime = null;
     let elementCounter = 0;
 
+    // --- CÓDIGO DO MEDIAPIPE ---
+    function onResults(results) {
+        canvasElement.width = videoPlayer.videoWidth;
+        canvasElement.height = videoPlayer.videoHeight;
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(videoPlayer, 0, 0, canvasElement.width, canvasElement.height);
+        if (results.multiHandLandmarks) {
+            for (const landmarks of results.multiHandLandmarks) {
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
+                drawLandmarks(canvasCtx, landmarks, { color: '#FF0000', lineWidth: 2 });
+            }
+        }
+    }
+
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+    hands.onResults(onResults);
+
+    // --- LÓGICA DE PROCESSAMENTO DE VÍDEO ---
+    async function processVideoFrame() {
+        if (videoPlayer.paused || videoPlayer.ended) {
+            return;
+        }
+        await hands.send({ image: videoPlayer });
+        requestAnimationFrame(processVideoFrame);
+    }
+    
+    videoPlayer.addEventListener('play', processVideoFrame);
+
     // --- FUNÇÕES DE CÁLCULO E ATUALIZAÇÃO ---
     const updateSummary = () => {
         const allRows = analysisTableBody.querySelectorAll('tr');
         const standardTimeCells = document.querySelectorAll('.standard-time-cell');
-        
         let totalStandardTime = 0;
         standardTimeCells.forEach(cell => {
             const timeValue = parseFloat(cell.textContent);
@@ -35,10 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalStandardTime += timeValue;
             }
         });
-        
         const totalElements = allRows.length;
         const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
-
         totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
         totalElementsEl.textContent = totalElements;
         averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
@@ -55,30 +88,16 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("O tempo final deve ser maior que o tempo inicial.");
             return;
         }
-        
         elementCounter++;
         const delta = endTime - startTime;
-        
         const ritmo = parseFloat(ritmoInput.value);
         const suplemento = parseFloat(suplementoInput.value);
-
         const standardTime = await calculateStandardTime(delta, ritmo, suplemento);
-
         const newRow = analysisTableBody.insertRow();
-        newRow.innerHTML = `
-            <td>${elementCounter}</td>
-            <td>${startTime.toFixed(3)}</td>
-            <td>${endTime.toFixed(3)}</td>
-            <td>${delta.toFixed(3)}</td>
-            <td contenteditable="true" class="description-cell"></td>
-            <td contenteditable="true" class="mtm-code-cell"></td>
-            <td class="tmu-cell"></td>
-            <td class="standard-time-cell">${standardTime.toFixed(4)}</td>
-        `;
-
-        startTime = null; 
+        newRow.innerHTML = `<td>${elementCounter}</td><td>${startTime.toFixed(3)}</td><td>${endTime.toFixed(3)}</td><td>${delta.toFixed(3)}</td><td contenteditable="true" class="description-cell"></td><td contenteditable="true" class="mtm-code-cell"></td><td class="tmu-cell"></td><td class="standard-time-cell">${standardTime.toFixed(4)}</td>`;
+        startTime = null;
         markStartBtn.style.backgroundColor = '';
-        updateSummary(); 
+        updateSummary();
     };
 
     const handleGenerateReport = async () => {
@@ -88,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("A tabela de análise está vazia. Adicione movimentos para gerar um laudo.");
             return;
         }
-
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             tableData.push({
@@ -98,10 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 mtmCode: cells[5].textContent
             });
         });
-
         generateReportBtn.textContent = 'Analisando...';
         generateReportBtn.disabled = true;
-
         try {
             const response = await fetch(`${API_URL}/api/generate_report`, {
                 method: 'POST',
@@ -109,11 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(tableData)
             });
             if (!response.ok) throw new Error('Falha ao gerar o laudo a partir da API.');
-
             const data = await response.json();
             reportText.textContent = data.report;
             reportModal.style.display = 'block';
-
         } catch (error) {
             alert(error.message);
             console.error("Erro ao gerar laudo:", error);
@@ -183,10 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsText(file);
     };
 
-    // --- EVENT LISTENERS (OUVINTES DE EVENTOS) ---
+    // --- EVENT LISTENERS ---
     videoUpload.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) videoPlayer.src = URL.createObjectURL(file);
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            videoPlayer.src = fileURL;
+            videoPlayer.style.display = 'block';
+        }
     });
     
     markStartBtn.addEventListener('click', () => {
@@ -215,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
     saveConfigBtn.addEventListener('click', handleSaveConfig);
     loadConfigInput.addEventListener('change', handleLoadConfig);
 
-    // Listeners para o Laudo IA
     generateReportBtn.addEventListener('click', handleGenerateReport);
     closeButton.addEventListener('click', () => {
         reportModal.style.display = 'none';
