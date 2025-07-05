@@ -127,7 +127,6 @@ input[type="file"] {
     margin-bottom: 0;
     color: #333;
 }
-/* Estilos para o botão e modal do Laudo IA */
 #generateReportBtn {
     display: block;
     width: 100%;
@@ -187,4 +186,26 @@ input[type="file"] {
     border: 1px solid #ddd;
     min-height: 200px;
     font-family: 'Courier New', Courier, monospace;
+}
+/* NOVOS ESTILOS PARA O PLAYER DE VÍDEO COM CANVAS */
+.player-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px; /* Altura mínima para o container não sumir */
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.video-player {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+#outputCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
