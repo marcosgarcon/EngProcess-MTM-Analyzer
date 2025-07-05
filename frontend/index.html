@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngProcess - MTM Analyzer</title>
+    <title>EngProcess - MTM Analyzer com IA</title>
     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <header>
@@ -37,9 +42,14 @@
         </div>
 
         <div class="video-section">
-            <h2>Análise por Vídeo</h2>
+            <h2>Análise por Vídeo (com Assistente IA)</h2>
             <input type="file" id="videoUpload" accept="video/*">
-            <video id="videoPlayer" width="100%" controls></video>
+            
+            <div class="player-container">
+                <video id="videoPlayer" class="video-player" style="display: none;"></video>
+                <canvas id="outputCanvas" class="video-player"></canvas>
+            </div>
+
             <div class="controls">
                 <button id="markStartBtn">Marcar Início (I)</button>
                 <button id="markEndBtn">Marcar Fim (F)</button>
@@ -61,8 +71,7 @@
                         <th>Tempo Padrão (s)</th>
                     </tr>
                 </thead>
-                <tbody>
-                    </tbody>
+                <tbody></tbody>
             </table>
 
             <div class="summary-section">
