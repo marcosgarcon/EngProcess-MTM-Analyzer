@@ -1,6 +1,14 @@
+// CÓDIGO COMPLETO E CORRETO PARA frontend/script.js (COM LOG DE VERIFICAÇÃO)
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("1. DOM totalmente carregado. O script.js está a ser executado.");
+
     // --- REFERÊNCIAS AOS ELEMENTOS DO DOM ---
     const videoUpload = document.getElementById('videoUpload');
+
+    // NOVA LINHA DE VERIFICAÇÃO:
+    console.log("VERIFICAÇÃO: O elemento <input type='file'> foi encontrado?", videoUpload);
+
     const videoPlayer = document.getElementById('videoPlayer');
     const canvasElement = document.getElementById('outputCanvas');
     const canvasCtx = canvasElement.getContext('2d');
@@ -24,7 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let elementCounter = 0;
 
     // --- CÓDIGO DO MEDIAPIPE ---
+    console.log("2. A preparar o MediaPipe...");
+
     function onResults(results) {
+        console.log("6. MediaPipe obteve resultados. A desenhar no canvas...");
         canvasElement.width = videoPlayer.videoWidth;
         canvasElement.height = videoPlayer.videoHeight;
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -37,29 +48,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-    hands.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-    hands.onResults(onResults);
+    try {
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        hands.onResults(onResults);
+        console.log("3. Objeto 'Hands' do MediaPipe inicializado com sucesso.");
 
-    // --- LÓGICA DE PROCESSAMENTO DE VÍDEO ---
-    async function processVideoFrame() {
-        if (videoPlayer.paused || videoPlayer.ended) {
-            return;
+        async function processVideoFrame() {
+            if (videoPlayer.paused || videoPlayer.ended) {
+                return;
+            }
+            await hands.send({ image: videoPlayer });
+            requestAnimationFrame(processVideoFrame);
         }
-        await hands.send({ image: videoPlayer });
-        requestAnimationFrame(processVideoFrame);
-    }
-    
-    videoPlayer.addEventListener('play', processVideoFrame);
 
-    // --- FUNÇÕES DE CÁLCULO E ATUALIZAÇÃO ---
+        videoPlayer.addEventListener('play', () => {
+            console.log("5. Evento 'play' do vídeo foi disparado. A iniciar o processamento de frames.");
+            processVideoFrame();
+        });
+
+    } catch (e) {
+        console.error("ERRO CRÍTICO AO INICIAR O MEDIAPIPE:", e);
+    }
+
+    // --- EVENT LISTENERS ---
+    videoUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            console.log("4. Um ficheiro de vídeo foi carregado.");
+            const fileURL = URL.createObjectURL(file);
+            videoPlayer.src = fileURL;
+            videoPlayer.style.display = 'block';
+        }
+    });
+
+    markStartBtn.addEventListener('click', () => {
+        startTime = videoPlayer.currentTime;
+        markStartBtn.style.backgroundColor = '#28a745';
+        markEndBtn.style.backgroundColor = '';
+    });
+
+    markEndBtn.addEventListener('click', () => handleMarkEnd());
+
+    analysisTableBody.addEventListener('input', (e) => {
+        if (e.target.classList.contains('mtm-code-cell')) {
+            const cell = e.target;
+            const mtmCode = cell.innerText.trim().toUpperCase();
+            const tmuCell = cell.parentElement.querySelector('.tmu-cell');
+            if (mtmCode.length >= 2) fetchTMU(mtmCode, tmuCell);
+            else tmuCell.textContent = '';
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'i') markStartBtn.click();
+        if (e.key.toLowerCase() === 'f') markEndBtn.click();
+    });
+
+    saveConfigBtn.addEventListener('click', handleSaveConfig);
+    loadConfigInput.addEventListener('change', handleLoadConfig);
+
+    generateReportBtn.addEventListener('click', handleGenerateReport);
+    closeButton.addEventListener('click', () => {
+        reportModal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+        if (event.target == reportModal) {
+            reportModal.style.display = 'none';
+        }
+    });
+
+    // --- FUNÇÕES ---
     const updateSummary = () => {
         const allRows = analysisTableBody.querySelectorAll('tr');
         const standardTimeCells = document.querySelectorAll('.standard-time-cell');
@@ -77,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
     };
 
-    // --- FUNÇÕES DE INTERAÇÃO PRINCIPAL ---
     const handleMarkEnd = async () => {
         if (startTime === null) {
             alert("Por favor, marque o início do movimento primeiro!");
@@ -137,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- FUNÇÕES DE API (BACKEND) ---
     async function calculateStandardTime(delta, ritmo, suplemento) {
         try {
             const response = await fetch(`${API_URL}/api/calculate_standard_time`, {
@@ -169,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNÇÕES DE CONFIGURAÇÃO (JSON) ---
     const handleSaveConfig = () => {
         const config = { ritmo: ritmoInput.value, suplemento: suplementoInput.value };
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -185,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
                 const config = JSON.parse(e.target.result);
                 if (config.ritmo) ritmoInput.value = config.ritmo;
@@ -196,50 +259,4 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsText(file);
     };
-
-    // --- EVENT LISTENERS ---
-    videoUpload.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const fileURL = URL.createObjectURL(file);
-            videoPlayer.src = fileURL;
-            videoPlayer.style.display = 'block';
-        }
-    });
-    
-    markStartBtn.addEventListener('click', () => {
-        startTime = videoPlayer.currentTime;
-        markStartBtn.style.backgroundColor = '#28a745'; 
-        markEndBtn.style.backgroundColor = ''; 
-    });
-    
-    markEndBtn.addEventListener('click', handleMarkEnd);
-
-    analysisTableBody.addEventListener('input', (e) => {
-        if (e.target.classList.contains('mtm-code-cell')) {
-            const cell = e.target;
-            const mtmCode = cell.innerText.trim().toUpperCase();
-            const tmuCell = cell.parentElement.querySelector('.tmu-cell');
-            if (mtmCode.length >= 2) fetchTMU(mtmCode, tmuCell);
-            else tmuCell.textContent = '';
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'i') markStartBtn.click();
-        if (e.key.toLowerCase() === 'f') markEndBtn.click();
-    });
-
-    saveConfigBtn.addEventListener('click', handleSaveConfig);
-    loadConfigInput.addEventListener('change', handleLoadConfig);
-
-    generateReportBtn.addEventListener('click', handleGenerateReport);
-    closeButton.addEventListener('click', () => {
-        reportModal.style.display = 'none';
-    });
-    window.addEventListener('click', (event) => {
-        if (event.target == reportModal) {
-            reportModal.style.display = 'none';
-        }
-    });
 });
