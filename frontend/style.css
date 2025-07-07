@@ -209,3 +209,16 @@ input[type="file"] {
     left: 0;
     z-index: 1;
 }
+/* Estilo para a checkbox do modo automático */
+.auto-mode-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    padding: 10px;
+}
+.auto-mode-container label {
+    margin-left: 10px;
+    cursor: pointer;
+}
