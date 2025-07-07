@@ -3,52 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngProcess - MTM Analyzer com IA</title>
+    <title>EngProcess - MTM Analyzer v1.3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <header><h1>EngProcess - Ferramenta de Cronoanálise MTM</h1></header>
+    <header><h1>EngProcess MTM Analyzer</h1></header>
     <main class="container">
-        <div class="settings-section">
-            <h2>Parâmetros da Análise</h2>
+        <div class="settings-section card">
+            <h2><span class="icon">⚙️</span> Parâmetros da Análise</h2>
             <div class="params-grid">
                 <div><label for="ritmo">Fator de Ritmo (%)</label><input type="number" id="ritmo" value="100" step="1"></div>
                 <div><label for="suplemento">Suplementos (%)</label><input type="number" id="suplemento" value="5" step="1"></div>
-                <div class="auto-mode-container"><input type="checkbox" id="autoMarkCheckbox"><label for="autoMarkCheckbox">Modo Automático</label></div>
+                <div class="auto-mode-container"><label for="autoMarkCheckbox">Modo Automático</label><input type="checkbox" id="autoMarkCheckbox" class="toggle-switch"></div>
             </div>
             <div class="sensitivity-container">
-                <label for="sensitivitySlider">Sensibilidade da Deteção</label>
-                <input type="range" min="1" max="100" value="8" class="slider" id="sensitivitySlider">
-                <span id="sensitivityValue">0.008</span>
+                <label for="sensitivitySlider">Sensibilidade da Deteção: <span id="sensitivityValue">0.0080</span></label>
+                <input type="range" min="1" max="200" value="80" class="slider" id="sensitivitySlider">
             </div>
             <div class="config-buttons">
-                <button id="saveConfigBtn">Salvar Config. JSON</button>
-                <label for="loadConfigInput" class="button-like-label">Carregar Config. JSON</label>
-                <input type="file" id="loadConfigInput" accept=".json" style="display: none;">
+                <button id="saveConfigBtn" class="btn btn-secondary">Salvar Config. JSON</button>
+                <label for="loadConfigInput" class="btn btn-secondary">Carregar Config. JSON</label>
+                <input type="file" id="loadConfigInput" accept=".json">
             </div>
         </div>
-        <div class="video-section">
-            <h2>Análise por Vídeo (com Assistente IA)</h2>
+        <div class="video-section card">
+            <h2><span class="icon">🎬</span> Análise por Vídeo</h2>
             <input type="file" id="videoUpload" accept="video/*">
+            <small class="format-note">Recomendado: formato .MP4 (codec H.264). Outros formatos podem não funcionar.</small>
             <div class="player-container">
                 <video id="videoPlayer" class="video-player" style="display: none;" controls></video>
                 <canvas id="outputCanvas" class="video-player"></canvas>
             </div>
             <div class="controls">
-                <button id="markStartBtn">Marcar Início (I)</button>
-                <button id="markEndBtn">Marcar Fim (F)</button>
+                <button id="markStartBtn" class="btn">Marcar Início (I)</button>
+                <button id="markEndBtn" class="btn">Marcar Fim (F)</button>
             </div>
         </div>
-        <div class="analysis-section">
-            <h2>Tabela de Cronoanálise</h2>
-            <table id="analysisTable">
-                <thead><tr><th>Nº</th><th>Início (s)</th><th>Fim (s)</th><th>Delta (s)</th><th>Descrição</th><th>Código MTM</th><th>TMU</th><th>Tempo Padrão (s)</th></tr></thead>
-                <tbody></tbody>
-            </table>
+        <div class="analysis-section card">
+            <h2><span class="icon">📊</span> Tabela de Cronoanálise</h2>
+            <div class="table-wrapper">
+                <table id="analysisTable">
+                    <thead><tr><th>Nº</th><th>Início (s)</th><th>Fim (s)</th><th>Delta (s)</th><th>Descrição</th><th>Código MTM</th><th>TMU</th><th>Tempo Padrão (s)</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
             <div class="summary-section">
                 <h3>Sumário da Análise</h3>
                 <div class="summary-grid">
@@ -57,13 +63,13 @@
                     <div><h4>Tempo Médio / Elemento</h4><p id="average-time">0.00 s</p></div>
                 </div>
                 <div class="action-buttons-container">
-                    <button id="generateReportBtn">Gerar Laudo IA</button>
-                    <button id="exportCsvBtn">Exportar para CSV</button>
+                    <button id="generateReportBtn" class="btn btn-primary">Gerar Laudo IA</button>
+                    <button id="exportCsvBtn" class="btn btn-success">Exportar para CSV</button>
                 </div>
             </div>
         </div>
     </main>
-    <div id="reportModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Laudo de Análise e Sugestões de Melhoria</h2><pre id="report-text"></pre></div></div>
+    <div id="reportModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Laudo de Análise e Sugestões</h2><pre id="report-text"></pre></div></div>
     <script src="script.js"></script>
 </body>
 </html>
