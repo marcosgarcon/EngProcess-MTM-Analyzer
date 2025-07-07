@@ -222,3 +222,37 @@ input[type="file"] {
     margin-left: 10px;
     cursor: pointer;
 }
+/* Estilos para o contentor dos botões de ação */
+.action-buttons-container {
+    display: flex;
+    gap: 15px; /* Espaçamento entre os botões */
+    margin-top: 20px;
+}
+
+.action-buttons-container button {
+    flex-grow: 1; /* Faz com que ambos os botões ocupem o espaço disponível */
+    padding: 15px;
+    color: white;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Estilo específico para o botão de Laudo */
+#generateReportBtn {
+    background-color: #004080;
+}
+#generateReportBtn:hover {
+    background-color: #005a8d;
+}
+
+/* Estilo específico para o novo botão de Exportar */
+#exportCsvBtn {
+    background-color: #1a6802;
+}
+#exportCsvBtn:hover {
+    background-color: #2a8a0d;
+}
