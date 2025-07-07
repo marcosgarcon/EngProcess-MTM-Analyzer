@@ -1,6 +1,6 @@
 codigo_movimento,tmu,tipo,descricao
 R10A,6.1,ALCANCE,Alcance curto para objeto em local fixo
-R12B,8.0,ALCANCE,Alcance médio para objeto em local variável
+R12B,8.0,ALCANCE,Alcance médio para local variável
 R30E,18.5,ALCANCE,Alcance longo e com esforço
 G1A,2.0,PEGAR,Pegar objeto pequeno
 G1B,3.5,PEGAR,Pegar objeto deitado
