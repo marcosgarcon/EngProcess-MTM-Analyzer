@@ -1,30 +1,15 @@
 from flask import Flask, jsonify, request
-# A importação do CORS continua igual
 from flask_cors import CORS
 import csv
 import json
 
-# Inicializa o app Flask
 app = Flask(__name__)
 
-# --- LINHA MODIFICADA ---
-# Tornamos a permissão CORS mais explícita e robusta.
-# Isto diz: "Para qualquer rota que comece com /api/, permita pedidos vindos de http://localhost:8000".
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:8000"}})
+# --- LINHA CORRIGIDA ---
+# Agora permitimos pedidos de ambas as portas, 8000 e 8001.
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8000", "http://localhost:8001"]}})
 
-
-# Carrega os dados do MTM para a memória
-mtm_database = {}
-try:
-    with open('mtm_data.csv', mode='r', encoding='utf-8') as infile:
-        reader = csv.reader(infile)
-        next(reader) 
-        for rows in reader:
-            mtm_database[rows[0]] = float(rows[1])
-except FileNotFoundError:
-    print("Aviso: 'mtm_data.csv' não encontrado. O banco de dados MTM estará vazio.")
-
-# O resto do arquivo continua exatamente igual...
+# O resto do ficheiro continua igual...
 @app.route('/')
 def index():
     return "Servidor do EngProcess MTM Analyzer está funcionando!"
@@ -37,6 +22,7 @@ def get_tmu(codigo_movimento):
     else:
         return jsonify({"error": "Código de movimento não encontrado"}), 404
 
+# ... (cole o resto das suas rotas aqui, elas não mudam)
 @app.route('/api/calculate_standard_time', methods=['POST'])
 def calculate_standard_time():
     data = request.json
@@ -78,25 +64,25 @@ def generate_report():
         report_lines.append(
             f"- GARGALO IDENTIFICADO: O movimento '{max_time_element['description']}' "
             f"é o mais demorado, com {max_time_element['delta']:.2f} segundos. "
-            f"Ação sugerida: Analisar este movimento em detalhe. É possível simplificá-lo, "
-            f"usar uma ferramenta melhor ou aproximar os componentes?"
+            f"Ação sugerida: Analisar este movimento em detalhe."
         )
     empty_descriptions = sum(1 for el in analysis_data if not el.get('description', '').strip())
     if empty_descriptions > 0:
         report_lines.append(
             f"- DOCUMENTAÇÃO INCOMPLETA: Foram encontrados {empty_descriptions} movimentos sem descrição. "
-            f"Ação sugerida: Preencher todas as descrições para garantir a clareza do processo."
+            f"Ação sugerida: Preencher todas as descrições."
         )
     short_movements = sum(1 for el in analysis_data if float(el.get('delta', 0)) < 0.5 and float(el.get('delta', 0)) > 0)
     if short_movements > 3:
         report_lines.append(
             f"- ALTA FRAGMENTAÇÃO: Existem {short_movements} movimentos muito curtos (< 0.5s). "
-            f"Ação sugerida: Avaliar se é possível combinar múltiplos movimentos pequenos em um único e mais fluido."
+            f"Ação sugerida: Avaliar se é possível combinar movimentos."
         )
     report_lines.append("\n" + "="*40)
     report_lines.append("  Laudo gerado por EngProcess MTM Analyzer")
     report_lines.append("="*40)
     return jsonify({"report": "\n".join(report_lines)})
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
