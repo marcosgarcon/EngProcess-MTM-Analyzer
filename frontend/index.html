@@ -31,8 +31,13 @@
                 </div>
                 <div class="auto-mode-container">
                     <input type="checkbox" id="autoMarkCheckbox">
-                    <label for="autoMarkCheckbox">Modo Automático (Experimental)</label>
+                    <label for="autoMarkCheckbox">Modo Automático</label>
                 </div>
+            </div>
+            <div class="sensitivity-container">
+                <label for="sensitivitySlider">Sensibilidade da Deteção</label>
+                <input type="range" min="1" max="100" value="8" class="slider" id="sensitivitySlider">
+                <span id="sensitivityValue">0.008</span>
             </div>
             <div class="config-buttons">
                 <button id="saveConfigBtn">Salvar Config. JSON</button>
@@ -44,31 +49,21 @@
         <div class="video-section">
             <h2>Análise por Vídeo (com Assistente IA)</h2>
             <input type="file" id="videoUpload" accept="video/*">
-            
             <div class="player-container">
                 <video id="videoPlayer" class="video-player" style="display: none;" controls></video>
                 <canvas id="outputCanvas" class="video-player"></canvas>
             </div>
-
             <div class="controls">
                 <button id="markStartBtn">Marcar Início (I)</button>
                 <button id="markEndBtn">Marcar Fim (F)</button>
             </div>
         </div>
-
         <div class="analysis-section">
             <h2>Tabela de Cronoanálise</h2>
             <table id="analysisTable">
                 <thead>
                     <tr>
-                        <th>Nº</th>
-                        <th>Início (s)</th>
-                        <th>Fim (s)</th>
-                        <th>Delta (s)</th>
-                        <th>Descrição</th>
-                        <th>Código MTM</th>
-                        <th>TMU</th>
-                        <th>Tempo Padrão (s)</th>
+                        <th>Nº</th><th>Início (s)</th><th>Fim (s)</th><th>Delta (s)</th><th>Descrição</th><th>Código MTM</th><th>TMU</th><th>Tempo Padrão (s)</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -76,32 +71,15 @@
             <div class="summary-section">
                 <h3>Sumário da Análise</h3>
                 <div class="summary-grid">
-                    <div>
-                        <h4>Tempo de Ciclo (Padrão)</h4>
-                        <p id="total-standard-time">0.00 s</p>
-                    </div>
-                    <div>
-                        <h4>Total de Elementos</h4>
-                        <p id="total-elements">0</p>
-                    </div>
-                    <div>
-                        <h4>Tempo Médio / Elemento</h4>
-                        <p id="average-time">0.00 s</p>
-                    </div>
+                    <div><h4>Tempo de Ciclo (Padrão)</h4><p id="total-standard-time">0.00 s</p></div>
+                    <div><h4>Total de Elementos</h4><p id="total-elements">0</p></div>
+                    <div><h4>Tempo Médio / Elemento</h4><p id="average-time">0.00 s</p></div>
                 </div>
                 <button id="generateReportBtn">Gerar Laudo IA</button>
             </div>
         </div>
     </main>
-
-    <div id="reportModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Laudo de Análise e Sugestões de Melhoria</h2>
-            <pre id="report-text"></pre>
-        </div>
-    </div>
-
+    <div id="reportModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Laudo de Análise e Sugestões de Melhoria</h2><pre id="report-text"></pre></div></div>
     <script src="script.js"></script>
 </body>
 </html>
