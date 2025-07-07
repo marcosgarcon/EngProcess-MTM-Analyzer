@@ -50,25 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const csv = [];
-        const rows = document.querySelectorAll("#analysisTable tr"); // Inclui o cabeçalho
+        let csvContent = "";
+        const rows = document.querySelectorAll("#analysisTable tr");
         
-        for (const row of rows) {
+        rows.forEach(row => {
             const cols = row.querySelectorAll("td, th");
             const rowData = [];
-            for (const col of cols) {
-                // Para lidar com texto que contém vírgulas, envolvemos em aspas duplas
-                let data = col.innerText.replace(/"/g, '""'); // Escapa aspas duplas existentes
+            cols.forEach(col => {
+                let data = col.innerText.replace(/"/g, '""');
                 rowData.push(`"${data}"`);
-            }
-            csv.push(rowData.join(','));
-        }
+            });
+            csvContent += rowData.join(",") + "\r\n";
+        });
 
-        const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(csvFile);
-        link.download = filename;
-        link.style.display = "none";
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -100,8 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
     closeButton.addEventListener('click', () => { reportModal.style.display = 'none'; });
     window.addEventListener('click', (event) => { if (event.target == reportModal) { reportModal.style.display = 'none'; } });
 
-    // Novo listener para o botão de exportar
+    // Novo listener para o nosso novo botão
     exportCsvBtn.addEventListener('click', () => {
-        exportTableToCSV('minha_cronoanalise.csv');
+        exportTableToCSV('cronoanalise.csv');
     });
 });
