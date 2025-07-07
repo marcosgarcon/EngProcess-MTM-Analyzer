@@ -1,4 +1,4 @@
-// VERSÃO FINAL CORRIGIDA - 7 de Julho
+// VERSÃO FINAL CORRIGIDA - 8 de Julho
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. REFERÊNCIAS A ELEMENTOS DO DOM ---
@@ -74,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         markStartBtn.style.backgroundColor = '';
         updateSummary();
     };
-
+    
+    // ****** FUNÇÃO CORRIGIDA ******
     const handleGenerateReport = async () => {
         const tableData = [];
         const rows = analysisTableBody.querySelectorAll('tr');
@@ -82,15 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("A tabela de análise está vazia. Adicione movimentos para gerar um laudo.");
             return;
         }
+
+        // Lógica "À Prova de Balas" para ler os dados da tabela
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            tableData.push({
-                id: cells[0].textContent,
-                delta: cells[3].textContent,
-                description: cells[4].textContent,
-                mtmCode: cells[5].textContent
-            });
+            if (cells.length >= 6) { // Verifica se a linha tem o mínimo de células esperado
+                const rowData = {
+                    id: cells[0] ? cells[0].textContent : '',
+                    delta: cells[3] ? cells[3].textContent : '0',
+                    description: cells[4] ? cells[4].textContent : '',
+                    mtmCode: cells[5] ? cells[5].textContent : ''
+                };
+                tableData.push(rowData);
+            }
         });
+        
         generateReportBtn.textContent = 'Analisando...';
         generateReportBtn.disabled = true;
         try {
@@ -174,98 +181,5 @@ document.addEventListener('DOMContentLoaded', () => {
         canvasElement.height = videoPlayer.videoHeight;
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
         canvasCtx.drawImage(videoPlayer, 0, 0, canvasElement.width, canvasElement.height);
-
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const handLandmarks = results.multiHandLandmarks[0];
-            drawConnectors(canvasCtx, handLandmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
-            drawLandmarks(canvasCtx, handLandmarks, { color: '#FF0000', lineWidth: 2 });
-
-            if (autoMarkEnabled) {
-                const wrist = handLandmarks[0];
-                if (lastHandPosition) {
-                    const dx = wrist.x - lastHandPosition.x;
-                    const dy = wrist.y - lastHandPosition.y;
-                    const dz = wrist.z - lastHandPosition.z;
-                    const velocity = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    const wasHandMoving = isHandMoving;
-                    isHandMoving = velocity > MOVEMENT_THRESHOLD;
-                    if (isHandMoving !== wasHandMoving && movementCooldown <= 0) {
-                        if (isHandMoving) {
-                            markStartBtn.click();
-                        } else {
-                            markEndBtn.click();
-                        }
-                        movementCooldown = 30;
-                    }
-                }
-                lastHandPosition = wrist;
-            }
-        }
-        if (movementCooldown > 0) movementCooldown--;
-    }
-
-    async function processVideoFrame() {
-        if (videoPlayer.paused || videoPlayer.ended) return;
-        await hands.send({ image: videoPlayer });
-        requestAnimationFrame(processVideoFrame);
-    }
-
-    // --- 4. INICIALIZAÇÃO E EVENT LISTENERS ---
-    
-    // MediaPipe
-    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
-    hands.onResults(onResults);
-
-    // Listeners
-    videoUpload.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            videoPlayer.src = URL.createObjectURL(file);
-            videoPlayer.style.display = 'block';
-        }
-    });
-    videoPlayer.addEventListener('play', processVideoFrame);
-    autoMarkCheckbox.addEventListener('change', (e) => {
-        autoMarkEnabled = e.target.checked;
-        if (autoMarkEnabled) {
-            isHandMoving = false;
-            lastHandPosition = null;
-        }
-    });
-    sensitivitySlider.addEventListener('input', (e) => {
-        const sliderValue = e.target.value;
-        MOVEMENT_THRESHOLD = sliderValue / 10000;
-        sensitivityValue.textContent = MOVEMENT_THRESHOLD.toFixed(4);
-    });
-    markStartBtn.addEventListener('click', () => {
-        startTime = videoPlayer.currentTime;
-        markStartBtn.style.backgroundColor = '#28a745';
-        markEndBtn.style.backgroundColor = '';
-    });
-    markEndBtn.addEventListener('click', handleMarkEnd);
-    analysisTableBody.addEventListener('input', (e) => {
-        if (e.target.classList.contains('mtm-code-cell')) {
-            const cell = e.target;
-            const mtmCode = cell.innerText.trim().toUpperCase();
-            const tmuCell = cell.parentElement.querySelector('.tmu-cell');
-            if (mtmCode.length >= 2) fetchTMU(mtmCode, tmuCell);
-            else tmuCell.textContent = '';
-        }
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'i') markStartBtn.click();
-        if (e.key.toLowerCase() === 'f') markEndBtn.click();
-    });
-    saveConfigBtn.addEventListener('click', handleSaveConfig);
-    loadConfigInput.addEventListener('change', handleLoadConfig);
-    generateReportBtn.addEventListener('click', handleGenerateReport);
-    closeButton.addEventListener('click', () => {
-        reportModal.style.display = 'none';
-    });
-    window.addEventListener('click', (event) => {
-        if (event.target == reportModal) {
-            reportModal.style.display = 'none';
-        }
-    });
-});
