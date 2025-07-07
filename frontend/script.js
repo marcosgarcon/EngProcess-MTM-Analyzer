@@ -1,9 +1,10 @@
-// VERSÃO CORRIGIDA E ESTÁVEL - 8 de Julho (Final)
+// VERSÃO ESTÁVEL E DEFINITIVA - 8 de Julho
 
+// Envolvemos todo o código no 'DOMContentLoaded' para garantir que o HTML está pronto.
 document.addEventListener('DOMContentLoaded', () => {
 
     // ===================================================================
-    // 1. REFERÊNCIAS A TODOS OS ELEMENTOS DA PÁGINA (DOM)
+    // 1. REFERÊNCIAS A ELEMENTOS DA PÁGINA (DOM)
     // ===================================================================
     const videoUpload = document.getElementById('videoUpload');
     const videoPlayer = document.getElementById('videoPlayer');
@@ -40,40 +41,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let movementCooldown = 0;
 
     // ===================================================================
-    // 3. DEFINIÇÃO DE TODAS AS FUNÇÕES
-    // (Definimos todas as funções primeiro, antes de as usarmos)
+    // 3. INICIALIZAÇÃO DO MEDIAPIPE (IA)
+    // ===================================================================
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
+    hands.onResults(onResults);
+
+    // ===================================================================
+    // 4. DEFINIÇÃO DE TODAS AS FUNÇÕES
+    // (Usar 'function' em vez de 'const' torna o código mais robusto a erros de ordem)
     // ===================================================================
 
-    const updateSummary = () => {
+    function updateSummary() {
         const allRows = analysisTableBody.querySelectorAll('tr');
         const standardTimeCells = document.querySelectorAll('.standard-time-cell');
         let totalStandardTime = 0;
         standardTimeCells.forEach(cell => {
             const timeValue = parseFloat(cell.textContent);
             if (!isNaN(timeValue)) totalStandardTime += timeValue;
-        });
-        const totalElements = allRows.length;
-        const averageTime = totalElements > 0 ? totalStandardTime / totalElements : 0;
-        totalStandardTimeEl.textContent = `${totalStandardTime.toFixed(2)} s`;
-        totalElementsEl.textContent = totalElements;
-        averageTimeEl.textContent = `${averageTime.toFixed(2)} s`;
-    };
-
-    async function calculateStandardTime(delta, ritmo, suplemento) {
-        try {
-            const response = await fetch(`${API_URL}/api/calculate_standard_time`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ delta, ritmo, suplemento })
-            });
-            if (!response.ok) return 0;
-            const data = await response.json();
-            return data.tempo_padrao;
-        } catch (error) { return 0; }
-    }
-
-    const handleMarkEnd = async () => {
-        if (startTime === null) return;
-        const endTime = videoPlayer.currentTime;
-        if (endTime <= startTime) return;
-        
-        elementCounter++;
