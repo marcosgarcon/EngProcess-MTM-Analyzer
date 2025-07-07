@@ -1,4 +1,4 @@
-// VERSÃO 1.1 ESTÁVEL
+// VERSÃO 1.2 - COM LAUDO IA MELHORADO E EXPORTAÇÃO CSV
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportModal = document.getElementById('reportModal');
     const reportText = document.getElementById('report-text');
     const closeButton = document.querySelector('.close-button');
-    
+
     // 2. VARIÁVEIS
     const API_URL = 'http://localhost:5000';
     let startTime = null;
